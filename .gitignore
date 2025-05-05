@@ -1,0 +1,40 @@
+# Node modules
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+.pnp
+.pnp.js
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Next.js specific
+.next/
+
+# Parcel specific
+.cache/
+
+# MacOS junk
+.DS_Store
+
+# Jest snapshots
+__snapshots__/
+
+# TypeScript build files
+*.tsbuildinfo
