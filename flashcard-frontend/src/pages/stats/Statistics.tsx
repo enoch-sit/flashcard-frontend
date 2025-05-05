@@ -1,333 +1,261 @@
-import React, { useEffect, useState } from 'react';
-import useStudy from '../../hooks/useStudy';
-import useDecks from '../../hooks/useDecks';
-import Loader from '../../components/common/Loader';
-import ErrorMessage from '../../components/common/ErrorMessage';
-import { formatDate, formatRelativeTime, formatDuration } from '../../utils/dateUtils';
+import React, { useState, useEffect } from 'react';
+import { Container, Header, Segment, Grid, Menu, Loader, Message, Statistic, Icon, Divider } from 'semantic-ui-react';
+import httpClient from '../../api/http';
+import { formatDate } from '../../utils/dateUtils';
+
+interface StatsData {
+  totalDecks: number;
+  totalCards: number;
+  totalStudySessions: number;
+  totalTimeSpentMinutes: number;
+  totalCardsStudied: number;
+  currentStreak: number;
+  longestStreak: number;
+  averageAccuracy: number;
+  studyByDay: { [key: string]: number };
+  cardsReviewedByDay: { [key: string]: number };
+  accuracyByDay: { [key: string]: number };
+  deckPerformance: Array<{
+    deckId: string;
+    deckName: string;
+    cardsStudied: number;
+    accuracy: number;
+    timeSpentMinutes: number;
+  }>;
+}
 
 const Statistics: React.FC = () => {
-  const { 
-    recentSessions, 
-    fetchAllStudySessions,
-    studyStats, 
-    fetchStudyStatistics,
-    isLoading, 
-    error 
-  } = useStudy();
-  
-  const { 
-    decks, 
-    fetchDecks, 
-    isLoading: isLoadingDecks, 
-    error: decksError 
-  } = useDecks();
+  const [activeView, setActiveView] = useState('overview');
+  const [timeFrame, setTimeFrame] = useState('month');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<StatsData | null>(null);
 
   useEffect(() => {
-    fetchAllStudySessions();
-    fetchStudyStatistics();
-    fetchDecks();
-  }, [fetchAllStudySessions, fetchStudyStatistics, fetchDecks]);
+    const fetchStatistics = async () => {
+      try {
+        setLoading(true);
+        const response = await httpClient.get(`/stats?timeFrame=${timeFrame}`);
+        setStats(response.data);
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Failed to load statistics');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const containerStyle: React.CSSProperties = {
-    maxWidth: '1000px',
-    margin: '0 auto',
-    padding: '20px',
+    fetchStatistics();
+  }, [timeFrame]);
+
+  // Generate placeholder data for visualization (in a real app, this would come from the API)
+  const generateChartData = () => {
+    if (!stats) return null;
+
+    // For overview charts
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return formatDate(date.toISOString()).split(' ')[0];
+    });
+
+    const studyActivity = last7Days.map(day => ({
+      date: day,
+      cardsStudied: stats.cardsReviewedByDay[day] || 0,
+      accuracy: (stats.accuracyByDay[day] || 0) * 100
+    }));
+
+    return { studyActivity };
   };
 
-  const headerStyle: React.CSSProperties = {
-    marginBottom: '30px',
-  };
+  const chartData = generateChartData();
 
-  const titleStyle: React.CSSProperties = {
-    color: '#2c3e50',
-    marginBottom: '10px',
-  };
+  const renderOverview = () => (
+    <Grid stackable columns={2}>
+      <Grid.Row>
+        <Grid.Column width={16}>
+          <Segment>
+            <Header as="h3">Study Summary</Header>
+            <Statistic.Group widths={4} size="small">
+              <Statistic>
+                <Statistic.Value>{stats?.totalDecks || 0}</Statistic.Value>
+                <Statistic.Label>Total Decks</Statistic.Label>
+              </Statistic>
+              <Statistic>
+                <Statistic.Value>{stats?.totalCards || 0}</Statistic.Value>
+                <Statistic.Label>Total Cards</Statistic.Label>
+              </Statistic>
+              <Statistic>
+                <Statistic.Value>{stats?.totalStudySessions || 0}</Statistic.Value>
+                <Statistic.Label>Study Sessions</Statistic.Label>
+              </Statistic>
+              <Statistic>
+                <Statistic.Value>{stats?.totalCardsStudied || 0}</Statistic.Value>
+                <Statistic.Label>Cards Reviewed</Statistic.Label>
+              </Statistic>
+            </Statistic.Group>
+          </Segment>
+        </Grid.Column>
+      </Grid.Row>
 
-  const subtitleStyle: React.CSSProperties = {
-    color: '#7f8c8d',
-    fontWeight: 'normal',
-    marginTop: '0',
-  };
+      <Grid.Row>
+        <Grid.Column>
+          <Segment>
+            <Header as="h3">Study Habits</Header>
+            <Statistic.Group widths={2} size="small">
+              <Statistic color="green">
+                <Statistic.Value>
+                  <Icon name="fire" /> {stats?.currentStreak || 0}
+                </Statistic.Value>
+                <Statistic.Label>Current Streak</Statistic.Label>
+              </Statistic>
+              <Statistic color="orange">
+                <Statistic.Value>
+                  <Icon name="trophy" /> {stats?.longestStreak || 0}
+                </Statistic.Value>
+                <Statistic.Label>Longest Streak</Statistic.Label>
+              </Statistic>
+            </Statistic.Group>
+            <Divider />
+            <p>
+              <strong>Total Study Time:</strong> {stats?.totalTimeSpentMinutes || 0} minutes
+            </p>
+            <p>
+              <strong>Average Accuracy:</strong> {stats?.averageAccuracy ? (stats.averageAccuracy * 100).toFixed(1) : 0}%
+            </p>
+          </Segment>
+        </Grid.Column>
 
-  const cardStyle: React.CSSProperties = {
-    backgroundColor: '#ffffff',
-    borderRadius: '8px',
-    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-    padding: '20px',
-    marginBottom: '20px',
-  };
+        <Grid.Column>
+          <Segment>
+            <Header as="h3">Study Activity (Last 7 Days)</Header>
+            <p>Charts would be displayed here in a full implementation</p>
+            <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {chartData?.studyActivity.map((day, index) => (
+                <div 
+                  key={day.date} 
+                  style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    margin: '0 10px'
+                  }}
+                >
+                  <div 
+                    style={{ 
+                      height: `${Math.min(day.cardsStudied * 10, 150)}px`, 
+                      width: '30px', 
+                      backgroundColor: '#2185d0',
+                      marginBottom: '5px'
+                    }}
+                  />
+                  <div>{day.date.split(' ')[0]}</div>
+                </div>
+              ))}
+            </div>
+          </Segment>
+        </Grid.Column>
+      </Grid.Row>
+    </Grid>
+  );
 
-  const statsGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginBottom: '30px',
-  };
+  const renderDeckPerformance = () => (
+    <Segment>
+      <Header as="h3">Deck Performance</Header>
+      {stats?.deckPerformance && stats.deckPerformance.length > 0 ? (
+        <div>
+          {stats.deckPerformance.map(deck => (
+            <Segment key={deck.deckId}>
+              <Header as="h4">{deck.deckName}</Header>
+              <Grid columns={3} divided>
+                <Grid.Row>
+                  <Grid.Column textAlign="center">
+                    <p><strong>Cards Studied</strong></p>
+                    <p>{deck.cardsStudied}</p>
+                  </Grid.Column>
+                  <Grid.Column textAlign="center">
+                    <p><strong>Accuracy</strong></p>
+                    <p>{(deck.accuracy * 100).toFixed(1)}%</p>
+                  </Grid.Column>
+                  <Grid.Column textAlign="center">
+                    <p><strong>Time Spent</strong></p>
+                    <p>{deck.timeSpentMinutes} min</p>
+                  </Grid.Column>
+                </Grid.Row>
+              </Grid>
+            </Segment>
+          ))}
+        </div>
+      ) : (
+        <Message info>
+          <p>No study data available for your decks yet.</p>
+        </Message>
+      )}
+    </Segment>
+  );
 
-  const statCardStyle: React.CSSProperties = {
-    padding: '20px',
-    backgroundColor: '#f8f9fa',
-    borderRadius: '8px',
-    textAlign: 'center',
-  };
-
-  const statValueStyle: React.CSSProperties = {
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    margin: '0',
-    color: '#3498db',
-  };
-
-  const statLabelStyle: React.CSSProperties = {
-    color: '#7f8c8d',
-    margin: '5px 0 0 0',
-  };
-
-  const sectionHeaderStyle: React.CSSProperties = {
-    borderBottom: '1px solid #eee',
-    paddingBottom: '10px',
-    marginBottom: '20px',
-  };
-
-  const sectionTitleStyle: React.CSSProperties = {
-    margin: 0,
-    color: '#2c3e50',
-  };
-
-  const tableStyle: React.CSSProperties = {
-    width: '100%',
-    borderCollapse: 'collapse',
-  };
-
-  const thStyle: React.CSSProperties = {
-    textAlign: 'left',
-    padding: '12px 15px',
-    backgroundColor: '#f8f9fa',
-    borderBottom: '1px solid #e0e0e0',
-  };
-
-  const tdStyle: React.CSSProperties = {
-    padding: '12px 15px',
-    borderBottom: '1px solid #f1f1f1',
-  };
-
-  const barChartContainerStyle: React.CSSProperties = {
-    marginTop: '30px',
-    height: '200px',
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'space-around',
-    padding: '0 10px',
-  };
-
-  const calculateBarHeight = (value: number, maxValue: number): number => {
-    if (maxValue === 0) return 0;
-    return (value / maxValue) * 180; // Max height of 180px
-  };
-
-  // Get the max values for our charts
-  const maxSessionCards = Math.max(...recentSessions.map(s => s.reviews.length), 1);
-  const maxDeckCardCount = Math.max(...decks.map(d => d.cardCount || 0), 1);
-
-  // Calculate average difficulty across all sessions
-  const calculateAverageDifficulty = (): number => {
-    const allReviews = recentSessions.flatMap(s => s.reviews);
-    if (allReviews.length === 0) return 0;
-    
-    const sum = allReviews.reduce((acc, review) => acc + review.rating, 0);
-    return parseFloat((sum / allReviews.length).toFixed(1));
-  };
-
-  // Calculate total study time
-  const calculateTotalStudyTime = (): number => {
-    return recentSessions.reduce((total, session) => total + session.duration, 0);
-  };
-
-  if (isLoading || isLoadingDecks) {
-    return <Loader size="large" text="Loading statistics..." />;
+  if (loading) {
+    return (
+      <Container>
+        <Loader active>Loading statistics...</Loader>
+      </Container>
+    );
   }
 
-  if (error || decksError) {
-    return <ErrorMessage message={error || decksError || 'An error occurred'} />;
+  if (error) {
+    return (
+      <Container>
+        <Message negative>
+          <Message.Header>Error</Message.Header>
+          <p>{error}</p>
+        </Message>
+      </Container>
+    );
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={headerStyle}>
-        <h1 style={titleStyle}>Statistics</h1>
-        <h2 style={subtitleStyle}>Track your learning progress</h2>
-      </div>
-      
-      {/* Summary Statistics */}
-      <div style={cardStyle}>
-        <div style={sectionHeaderStyle}>
-          <h2 style={sectionTitleStyle}>Summary</h2>
-        </div>
+    <Container>
+      <Header as="h1" dividing>
+        <Icon name="chart bar" />
+        <Header.Content>
+          Statistics
+          <Header.Subheader>Track your learning progress and performance</Header.Subheader>
+        </Header.Content>
+      </Header>
+
+      <Menu pointing secondary>
+        <Menu.Item
+          name="Overview"
+          active={activeView === 'overview'}
+          onClick={() => setActiveView('overview')}
+        />
+        <Menu.Item
+          name="Deck Performance"
+          active={activeView === 'deckPerformance'}
+          onClick={() => setActiveView('deckPerformance')}
+        />
         
-        <div style={statsGridStyle}>
-          <div style={statCardStyle}>
-            <p style={statValueStyle}>{studyStats.totalCards || 0}</p>
-            <p style={statLabelStyle}>Total Cards</p>
-          </div>
-          
-          <div style={statCardStyle}>
-            <p style={statValueStyle}>{studyStats.totalReviews || 0}</p>
-            <p style={statLabelStyle}>Total Reviews</p>
-          </div>
-          
-          <div style={statCardStyle}>
-            <p style={statValueStyle}>{studyStats.totalSessions || 0}</p>
-            <p style={statLabelStyle}>Study Sessions</p>
-          </div>
-          
-          <div style={statCardStyle}>
-            <p style={statValueStyle}>{formatDuration(calculateTotalStudyTime())}</p>
-            <p style={statLabelStyle}>Total Study Time</p>
-          </div>
-          
-          <div style={statCardStyle}>
-            <p style={statValueStyle}>{calculateAverageDifficulty()}</p>
-            <p style={statLabelStyle}>Avg. Difficulty</p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Deck Statistics */}
-      <div style={cardStyle}>
-        <div style={sectionHeaderStyle}>
-          <h2 style={sectionTitleStyle}>Decks</h2>
-        </div>
-        
-        {decks.length > 0 ? (
-          <>
-            <div style={barChartContainerStyle}>
-              {decks.slice(0, 10).map(deck => (
-                <div key={deck.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1' }}>
-                  <div 
-                    style={{ 
-                      height: `${calculateBarHeight(deck.cardCount || 0, maxDeckCardCount)}px`,
-                      width: '40px',
-                      backgroundColor: '#3498db',
-                      borderRadius: '4px 4px 0 0',
-                    }}
-                  />
-                  <div style={{ 
-                    fontSize: '0.8rem', 
-                    marginTop: '5px', 
-                    textAlign: 'center', 
-                    width: '60px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }} title={deck.name}>
-                    {deck.name}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#7f8c8d' }}>
-                    {deck.cardCount} cards
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <table style={tableStyle}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>Deck Name</th>
-                  <th style={thStyle}>Cards</th>
-                  <th style={thStyle}>Due Cards</th>
-                  <th style={thStyle}>Last Studied</th>
-                </tr>
-              </thead>
-              <tbody>
-                {decks.map(deck => (
-                  <tr key={deck.id}>
-                    <td style={tdStyle}>{deck.name}</td>
-                    <td style={tdStyle}>{deck.cardCount}</td>
-                    <td style={tdStyle}>{deck.dueCardCount || 0}</td>
-                    <td style={tdStyle}>
-                      {deck.lastStudied 
-                        ? formatRelativeTime(deck.lastStudied)
-                        : 'Never'
-                      }
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        ) : (
-          <p style={{ textAlign: 'center', color: '#7f8c8d' }}>
-            No decks created yet.
-          </p>
-        )}
-      </div>
-      
-      {/* Recent Sessions */}
-      <div style={cardStyle}>
-        <div style={sectionHeaderStyle}>
-          <h2 style={sectionTitleStyle}>Recent Study Sessions</h2>
-        </div>
-        
-        {recentSessions.length > 0 ? (
-          <>
-            <div style={barChartContainerStyle}>
-              {recentSessions.slice(0, 10).map(session => (
-                <div key={session.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1' }}>
-                  <div 
-                    style={{ 
-                      height: `${calculateBarHeight(session.reviews.length, maxSessionCards)}px`,
-                      width: '40px',
-                      backgroundColor: '#2ecc71',
-                      borderRadius: '4px 4px 0 0',
-                    }}
-                  />
-                  <div style={{ fontSize: '0.8rem', marginTop: '5px' }}>
-                    {formatDate(session.completedAt, 'MM/DD')}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#7f8c8d' }}>
-                    {session.reviews.length} cards
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <table style={tableStyle}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>Deck</th>
-                  <th style={thStyle}>Date</th>
-                  <th style={thStyle}>Cards</th>
-                  <th style={thStyle}>Duration</th>
-                  <th style={thStyle}>Avg. Rating</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentSessions.map(session => {
-                  // Calculate average rating
-                  const avgRating = session.reviews.length > 0
-                    ? (session.reviews.reduce((sum, r) => sum + r.rating, 0) / session.reviews.length).toFixed(1)
-                    : '-';
-                  
-                  return (
-                    <tr key={session.id}>
-                      <td style={tdStyle}>{session.deckName}</td>
-                      <td style={tdStyle}>{formatDate(session.completedAt)}</td>
-                      <td style={tdStyle}>{session.reviews.length}</td>
-                      <td style={tdStyle}>{formatDuration(session.duration)}</td>
-                      <td style={tdStyle}>{avgRating}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </>
-        ) : (
-          <p style={{ textAlign: 'center', color: '#7f8c8d' }}>
-            No study sessions yet. Start studying to see statistics!
-          </p>
-        )}
-      </div>
-    </div>
+        <Menu.Menu position="right">
+          <Menu.Item header>Time Period:</Menu.Item>
+          <Menu.Item
+            name="Week"
+            active={timeFrame === 'week'}
+            onClick={() => setTimeFrame('week')}
+          />
+          <Menu.Item
+            name="Month"
+            active={timeFrame === 'month'}
+            onClick={() => setTimeFrame('month')}
+          />
+          <Menu.Item
+            name="All Time"
+            active={timeFrame === 'all'}
+            onClick={() => setTimeFrame('all')}
+          />
+        </Menu.Menu>
+      </Menu>
+
+      {activeView === 'overview' ? renderOverview() : renderDeckPerformance()}
+    </Container>
   );
 };
 
