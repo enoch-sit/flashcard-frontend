@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { requestPasswordReset } from '../../api/auth';
 
 const ForgotPassword: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,7 @@ const ForgotPassword: React.FC = () => {
     setLoading(true);
     
     try {
-      await requestPasswordReset(email);
+      await requestPasswordReset({ email });
       setSuccessMessage('Password reset instructions have been sent to your email address.');
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred. Please try again.');

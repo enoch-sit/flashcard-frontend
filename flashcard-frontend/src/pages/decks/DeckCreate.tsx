@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Container, Header, Form, Button, Icon, Message } from 'semantic-ui-react';
 import { useNavigate } from 'react-router-dom';
-import { useDecks } from '../../hooks/useDecks';
+import  useDecks  from '../../hooks/useDecks';
 import { DeckCreateRequest } from '../../types/deck';
 
 const DeckCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { createDeck, loading, error } = useDecks();
+  const { createDeck, isLoading, error } = useDecks();
   
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -52,7 +52,7 @@ const DeckCreate: React.FC = () => {
         </Message>
       )}
       
-      <Form onSubmit={handleSubmit} loading={loading}>
+      <Form onSubmit={handleSubmit} loading={isLoading}>
         <Form.Field required>
           <label>Deck Name</label>
           <Form.Input 
@@ -76,7 +76,7 @@ const DeckCreate: React.FC = () => {
             Cancel
           </Button>
           <Button.Or />
-          <Button primary type="submit" disabled={loading}>
+          <Button primary type="submit" disabled={isLoading}>
             Create Deck
           </Button>
         </Button.Group>

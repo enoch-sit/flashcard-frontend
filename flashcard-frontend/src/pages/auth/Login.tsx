@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Header, Segment, Message, Grid, Image } from 'semantic-ui-react';
 import LoginForm from '../../components/auth/LoginForm';
-import { useAuth } from '../../hooks/useAuth';
+import useAuth from '../../hooks/useAuth';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();

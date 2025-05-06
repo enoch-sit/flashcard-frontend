@@ -3,7 +3,11 @@ import { Link } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import ErrorMessage from '../common/ErrorMessage';
 
-const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onError?: (message: string) => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onError }) => {
   const { login, isLoading, error, clearError } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -12,8 +16,11 @@ const LoginForm: React.FC = () => {
     e.preventDefault();
     try {
       await login({ username, password });
-    } catch (error) {
+    } catch (err: any) {
       // Error is handled by the auth context
+      if (onError) {
+        onError(err.message || 'Login failed');
+      }
     }
   };
 

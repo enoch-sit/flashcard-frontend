@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Header, Form, Button, Icon, Message, Segment, Loader } from 'semantic-ui-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDecks } from '../../hooks/useDecks';
+import useDecks from '../../hooks/useDecks';
 import { Deck } from '../../types/deck';
 import httpClient from '../../api/http';
 
 const DeckEdit: React.FC = () => {
   const { deckId } = useParams<{ deckId: string }>();
   const navigate = useNavigate();
-  const { updateDeck, loading: updateLoading, error: updateError } = useDecks();
+  const { updateDeck, isLoading: updateLoading, error: updateError } = useDecks();
   
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');

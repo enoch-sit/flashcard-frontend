@@ -5,7 +5,7 @@ import {
   Message, Grid, Statistic, Confirm, Divider
 } from 'semantic-ui-react';
 import httpClient from '../../api/http';
-import { useDecks } from '../../hooks/useDecks';
+import useDecks from '../../hooks/useDecks';
 import { Deck } from '../../types/deck';
 import { Card } from '../../types/card';
 import { formatDate } from '../../utils/dateUtils';
@@ -51,10 +51,9 @@ const DeckDetail: React.FC = () => {
     if (!deckId) return;
     
     try {
-      const success = await deleteDeck(deckId);
-      if (success) {
-        navigate('/decks');
-      }
+      await deleteDeck(deckId);
+      // The delete was successful if we reached this point
+      navigate('/decks');
     } catch (err) {
       console.error('Error deleting deck:', err);
     }
@@ -140,7 +139,7 @@ const DeckDetail: React.FC = () => {
               </Button>
             </Segment>
           ) : (
-            <CardList cards={cards} deckId={deckId} />
+            <CardList deckId={deckId || ''} deckName={deck.name} />
           )}
         </Grid.Column>
         

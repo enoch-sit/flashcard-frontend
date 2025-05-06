@@ -4,7 +4,12 @@ import useAuth from '../../hooks/useAuth';
 import ErrorMessage from '../common/ErrorMessage';
 import { isValidEmail, validatePassword, doPasswordsMatch, isValidUsername } from '../../utils/validation';
 
-const RegisterForm: React.FC = () => {
+interface RegisterFormProps {
+  onSuccess?: () => void;
+  onError?: (errorMessage: string) => void;
+}
+
+const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onError }) => {
   const { register, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
   
@@ -55,7 +60,18 @@ const RegisterForm: React.FC = () => {
       setEmail('');
       setPassword('');
       setConfirmPassword('');
+      
+      // Call onSuccess prop if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
+      // Call onError prop if provided
+      if (onError && error instanceof Error) {
+        onError(error.message);
+      } else if (onError) {
+        onError('An unknown error occurred');
+      }
       // Error is handled by auth context
     }
   };

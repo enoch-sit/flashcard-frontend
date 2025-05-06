@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Header, Button, Icon, Segment, Message } from 'semantic-ui-react';
 import httpClient from '../../api/http';
 import CardForm from '../../components/cards/CardForm';
-import { Card, CardCreateRequest } from '../../types/card';
+import { Card, CardCreateRequest, CardUpdateRequest } from '../../types/card';
 
 const CardEdit: React.FC = () => {
   const { deckId, cardId } = useParams<{ deckId: string; cardId: string }>();
@@ -41,7 +41,7 @@ const CardEdit: React.FC = () => {
     fetchCardDetails();
   }, [deckId, cardId]);
 
-  const handleUpdateCard = async (cardData: CardCreateRequest) => {
+  const handleUpdateCard = async (cardData: CardCreateRequest | CardUpdateRequest): Promise<any> => {
     if (!deckId || !cardId) return;
     
     setLoading(true);
@@ -99,13 +99,12 @@ const CardEdit: React.FC = () => {
       )}
       
       <CardForm 
-        initialValues={{
-          front: card.front,
-          back: card.back,
-          notes: card.notes
-        }}
+        deckId={deckId || ''}
+        initialValues={card}
         onSubmit={handleUpdateCard}
         isLoading={loading}
+        error={error}
+        mode="edit"
       />
       
       <div style={{ marginTop: '2rem', textAlign: 'right' }}>

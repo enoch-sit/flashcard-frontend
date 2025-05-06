@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Grid, Header, Image, Message, Segment } from 'semantic-ui-react';
 import { Link, useNavigate } from 'react-router-dom';
 import RegisterForm from '../../components/auth/RegisterForm';
-import { useAuth } from '../../hooks/useAuth';
+import useAuth from '../../hooks/useAuth';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();

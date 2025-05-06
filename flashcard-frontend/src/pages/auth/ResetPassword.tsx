@@ -53,7 +53,7 @@ const ResetPassword: React.FC = () => {
     setLoading(true);
     
     try {
-      await resetPassword(token, newPassword);
+      await resetPassword({ token, newPassword });
       setSuccess(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred. Please try again.');
