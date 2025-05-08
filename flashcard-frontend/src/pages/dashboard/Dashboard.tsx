@@ -5,7 +5,7 @@ import useStudy from '../../hooks/useStudy';
 import RecentActivity from '../../components/study/RecentActivity';
 import Loader from '../../components/common/Loader';
 import ErrorMessage from '../../components/common/ErrorMessage';
-import { formatDate, formatRelativeTime } from '../../utils/dateUtils';
+import { formatRelativeTime } from '../../utils/dateUtils';
 import { Deck } from '../../types/deck';
 
 const Dashboard: React.FC = () => {
@@ -168,7 +168,7 @@ const Dashboard: React.FC = () => {
         key={deck.id}
       >
         <li style={deckItemStyle}>
-          {deck.dueCardCount > 0 && (
+          {deck.dueCardCount && deck.dueCardCount > 0 && (
             <div style={badgeStyle}>{deck.dueCardCount} due</div>
           )}
           <h3 style={deckTitleStyle}>{deck.name}</h3>
@@ -180,7 +180,7 @@ const Dashboard: React.FC = () => {
               <span>Never studied</span>
             )}
           </div>
-          {deck.dueCardCount > 0 && (
+          {deck.dueCardCount && deck.dueCardCount > 0 && (
             <Link 
               to={`/study/${deck.id}`}
               style={{...buttonStyle, fontSize: '0.9rem', padding: '8px 15px'}}
@@ -247,7 +247,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <p>You've studied <strong>{recentSessions.reduce((sum, session) => sum + session.reviews.length, 0)}</strong> cards in total.</p>
+              <p>You've studied <strong>{recentSessions.reduce((sum: number, session: any) => sum + session.reviews.length, 0)}</strong> cards in total.</p>
               <p>Keep up the good work!</p>
             </div>
           </div>

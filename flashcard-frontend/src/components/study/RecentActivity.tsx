@@ -13,7 +13,8 @@ interface StudySession {
 
 interface RecentActivityProps {
   recentSessions: StudySession[];
-  isLoading: boolean;
+  isLoading?: boolean;
+  upcomingCards?: number; // Adding the missing upcomingCards property
 }
 
 const RecentActivity: React.FC<RecentActivityProps> = ({ recentSessions, isLoading }) => {

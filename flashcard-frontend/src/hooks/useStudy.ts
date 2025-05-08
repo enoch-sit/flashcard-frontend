@@ -7,10 +7,37 @@ const useStudy = () => {
   const [cardsToReview, setCardsToReview] = useState<Card[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [studySessions, setStudySessions] = useState<StudySession[]>([]);
+  const [recentSessions, setRecentSessions] = useState<any[]>([]); // Adding recentSessions state
+  const [upcomingReviewCount, setUpcomingReviewCount] = useState<number>(0); // Adding upcomingReviewCount state
+  const [cardsToStudy, setCardsToStudy] = useState<Card[]>([]); // Adding cardsToStudy state
   const [currentSession, setCurrentSession] = useState<StudySession | null>(null);
   const [statistics, setStatistics] = useState<StudyStatistics | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Add fetchRecentSessions function
+  const fetchRecentSessions = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // In a real implementation, this would call an API endpoint
+      // For now, we'll use the existing getStudySessions as a placeholder
+      const sessions = await sessionsApi.getStudySessions(10, 0);
+      setRecentSessions(sessions);
+      
+      // Mock upcoming review count calculation
+      // In a real implementation, this would be returned from the API
+      setUpcomingReviewCount(Math.floor(Math.random() * 20));
+      
+      return sessions;
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to fetch recent sessions. Please try again.');
+      console.error('Error fetching recent sessions:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const startStudySession = async (deckId: string) => {
     setIsLoading(true);
@@ -22,6 +49,7 @@ const useStudy = () => {
       // Fetch cards to review for this session
       const cards = await sessionsApi.getCardsToReview(deckId);
       setCardsToReview(cards);
+      setCardsToStudy(cards); // Set cards to study as well
       
       return { session, cards };
     } catch (error: any) {
@@ -131,7 +159,12 @@ const useStudy = () => {
     getStudySessions,
     getSessionById,
     getStudyStatistics,
-    clearError
+    clearError,
+    // Add new properties to the return object
+    recentSessions,
+    upcomingReviewCount,
+    fetchRecentSessions,
+    cardsToStudy
   };
 };
 

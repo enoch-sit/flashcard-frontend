@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
 import { refreshToken as refreshTokenApi, logout } from './auth';
 
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -12,7 +12,7 @@ const httpClient: AxiosInstance = axios.create({
 
 // Request interceptor for adding auth token
 httpClient.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('accessToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -27,7 +27,7 @@ let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value: unknown) => void;
   reject: (reason?: any) => void;
-  config: AxiosRequestConfig;
+  config: InternalAxiosRequestConfig;
 }> = [];
 
 const processQueue = (error: AxiosError | null, token: string | null = null) => {
@@ -51,7 +51,8 @@ httpClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject, config: originalRequest });
+          // Convert originalRequest to InternalAxiosRequestConfig to match the type expected in failedQueue
+          failedQueue.push({ resolve, reject, config: originalRequest as unknown as InternalAxiosRequestConfig });
         });
       }
 

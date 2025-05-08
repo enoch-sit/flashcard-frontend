@@ -1,1 +1,39 @@
-This file is intentionally left blank.
+/* Main Application Styles */
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  margin-bottom: 60px;
+}
+
+.app-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.5rem;
+  color: #3498db;
+}
+
+.app-footer {
+  background-color: #f8f9fa;
+  padding: 15px 0;
+  border-top: 1px solid #e7e7e7;
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  color: #6c757d;
+}

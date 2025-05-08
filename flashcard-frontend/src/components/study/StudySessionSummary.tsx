@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDuration } from '../../utils/dateUtils';
+import { StudySession } from '../../types/study';
 
 interface Review {
   cardId: string;
@@ -8,23 +9,22 @@ interface Review {
 }
 
 interface StudySessionSummaryProps {
-  deckId: string;
+  session: StudySession;
   deckName: string;
-  cardsReviewed: number;
-  correctAnswers: number;
-  duration: number;
-  reviews: Review[];
+  onStartNewSession: () => Promise<void>;
+  reviews?: Review[]; // Made optional since it might not be in the session object
 }
 
 const StudySessionSummary: React.FC<StudySessionSummaryProps> = ({
-  deckId,
+  session,
   deckName,
-  cardsReviewed,
-  correctAnswers,
-  duration,
-  reviews,
+  onStartNewSession,
+  reviews = [], // Default to empty array if not provided
 }) => {
   const navigate = useNavigate();
+  
+  // Extract values from the session object
+  const { deckId, cardsStudied: cardsReviewed, cardsCorrect: correctAnswers, timeSpentSeconds: duration } = session;
 
   // Calculate accuracy percentage
   const accuracy = cardsReviewed > 0 
@@ -212,7 +212,7 @@ const StudySessionSummary: React.FC<StudySessionSummaryProps> = ({
       <div style={buttonContainerStyle}>
         <button 
           style={primaryButtonStyle} 
-          onClick={() => navigate(`/decks/${deckId}/study`)}
+          onClick={onStartNewSession}
         >
           Study Again
         </button>

@@ -6,6 +6,7 @@ export interface Deck {
   createdAt: string;
   updatedAt: string;
   lastStudied?: string;
+  dueCardCount?: number; // Adding the missing dueCardCount property
 }
 
 export interface DeckCreateRequest {

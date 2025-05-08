@@ -99,3 +99,20 @@ export const getDateFromNow = (days: number): Date => {
   date.setDate(date.getDate() + days);
   return date;
 };
+
+/**
+ * Format distance from now to the given date
+ * @param date Date object or string
+ * @returns Human-readable distance (e.g., "2 hours ago" or "in 3 days")
+ */
+export const formatDistanceToNow = (date: Date | string): string => {
+  const targetDate = typeof date === 'string' ? new Date(date) : date;
+  
+  // Use the existing formatRelativeTime logic
+  if (typeof targetDate === 'string') {
+    return formatRelativeTime(targetDate);
+  } else {
+    const dateString = targetDate.toISOString();
+    return formatRelativeTime(dateString);
+  }
+};

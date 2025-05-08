@@ -31,7 +31,7 @@ const Register: React.FC = () => {
       <Grid centered columns={2} stackable>
         <Grid.Column>
           <Header as="h2" color="teal" textAlign="center">
-            <Image src="/logo.png" /> Create a new account
+            <Image src="/logo.png" size="medium" wrapped={false} /> Create a new account
           </Header>
           
           {successMessage && (

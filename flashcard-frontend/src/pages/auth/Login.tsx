@@ -20,7 +20,8 @@ const Login: React.FC = () => {
       <Grid centered columns={2} stackable>
         <Grid.Column>
           <Header as="h2" color="teal" textAlign="center">
-            <Image src="/logo.png" /> Log in to your account
+            {/* Explicitly provide all props that might be using defaultProps */}
+            <Image src="/logo.png" size="medium" wrapped={false} /> Log in to your account
           </Header>
           
           {error && (
