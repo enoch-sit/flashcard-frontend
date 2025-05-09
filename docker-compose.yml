@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build: .
+    container_name: flashcard-frontend
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3000
+    volumes:
+      - ./flashcard-frontend:/app/flashcard-frontend
+      - /app/flashcard-frontend/node_modules
+
+# Custom network - simplified since we only have one service
+networks:
+  default:
+    driver: bridge
